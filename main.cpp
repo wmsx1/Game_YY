@@ -2,13 +2,13 @@
 #include <windows.h>
 #include <conio.h>
 using namespace std;
-const int MaxNum=5;
+const int max_num=5,Row=3,Line=3;
 
 class StackGame
 {
 private:
     int sizes=0;
-    int inner[7];
+    int inner[max_num+5];
 
 public:
     void init();
@@ -25,20 +25,31 @@ public:
 class GameObject
 {
 private:
-    
+    StackGame row[max_num];
+
 public:
-    
+    void init();
+    bool isFull();
+    int sumAll();
+    void displayGameBoard(bool upsidedown=false);
+    bool push(int position,int num);
+    void deleteNum(int position,int num);
 };
 
 class Game_YY
 {
 private:
-    StackGame player[MaxNum],computer[MaxNum];
+    //StackGame player[max_num],computer[max_num];
+    GameObject player,computer;
+    int sum_palyer=0,sum_computer=0;
 
 public:
-    void displayGameboard();
+    void displayGameBoard();
+    void init();
+    bool isPlayerWin();
+    int randomNum(int left=1,int right=6);
     void gameStart();
-    void Play();
+    void play();
     bool isGameOver();
     void gameEnd();
 };
@@ -55,11 +66,11 @@ int main()
     Game_YY a;
     a.gameStart();
     system("cls");
-    a.displayGameboard();
+    a.displayGameBoard();
     while(1)
     {
-        a.Play();
-        if(!a.isGameOver())
+        a.play();
+        if(a.isGameOver())
         {
             a.gameEnd();
             break;
@@ -71,49 +82,46 @@ int main()
 
 void Game_YY::gameEnd()
 {
-    cout<<"end"<<endl;
-    int sum1=0,sum2=0;
+    cout<<"Game Over"<<endl;
+    sum_palyer=0,sum_computer=0;
     for(int i=1;i<=3;i++)
     {
-        sum1+=this->player[i].sumAll();
-        sum2+=this->computer[i].sumAll();
+        sum_palyer+=this->player.sumAll();
+        sum_computer+=this->computer.sumAll();
     }
-    if(sum1>sum2)
+    if(this->isPlayerWin())
     {
         cout<<"you win"<<endl;
+        return ;
     }
-    if(sum1==sum2)
+    if(this->sum_computer==this->sum_palyer)
     {
         cout<<"none win"<<endl;
     }
-    if(sum1<sum2)
+    else
     {
         cout<<"you lost"<<endl;
     }
-
+}
+int Game_YY::randomNum(int l,int r)
+{
+    int roll=rand()%r+l;
+    return roll;
 }
 bool Game_YY::isGameOver()
 {
-    bool flag1=true,flag2=true;
-    for(int i=1;i<=3;i++)
-    {
-        if(!this->player[i].isFull())flag1=false;
-        if(!this->computer[i].isFull())flag2=false;
-    }
-
-    if(flag1==true || flag2==true)
-    {
-        return false;
-    }
-    return true;
+    if(this->player.isFull() || this->computer.isFull())
+        return true;
+    return false;
+}
+void Game_YY::init()
+{
+    this->computer.init();
+    this->player.init();
 }
 void Game_YY::gameStart()
 {
-    for(int i=1;i<=5;i++)
-    {
-        this->player[i].init();
-        this->computer[i].init();
-    }
+    this->init();
 
     cout<<"Hello"<<endl;
     cout<<"Press any key to continue___"<<endl;
@@ -126,22 +134,22 @@ void Game_YY::gameStart()
               "2. Help\n"
               "3. Author\n"
               "4. Exit"<<endl;
-
+        char operation=getch();
+        if(operation=='1')
+        {
+            return;
+        }
+        if(operation=='4')
+        {
+            exit(0);
+        }
 
     }
 }
-void Game_YY::displayGameboard()
+void Game_YY::displayGameBoard()
 {
-    int p=3;
-    for(int p=3;p>=1;p--)
-    {
-        for(int i=1;i<=3;i++)
-        {
-            this->computer[i].printSingle(p);
-            cout<<" ";
-        }
-        cout<<endl;
-    }
+    int sumComputer=this->computer.sumAll(),sumPlayer=this->player.sumAll();
+    this->computer.displayGameBoard();
 
     for(int i=1;i<=10;i++)
     {
@@ -149,60 +157,55 @@ void Game_YY::displayGameboard()
     }
     cout<<endl;
 
-    for(int p=1;p<=3;p++)
-    {
-        for(int i=1;i<=3;i++)
-        {
-            this->player[i].printSingle(p);
-            cout<<" ";
-        }
-        cout<<endl;
-    }
+    this->player.displayGameBoard();
+}
+bool Game_YY::isPlayerWin()
+{
 
 }
-void Game_YY::Play()
+void Game_YY::play()
 {
-    cout<<""<<endl;
+
     cout<<"roll 点"<<endl;
     int c=getch();
 
-    int roll=rand()%6+1;
+    int roll=this->randomNum();
     printf("%d 点\n",roll);
+
     cout<<"放在哪里(1-3)"<<endl;
     while(1)
     {
-        int x=getch()-'0';
-        if(!(1<=x<=3))
+        int position=getch()-'0';
+        if(!(1<=position<=3))
         {
             cout<<"错误"<<endl;
             continue;
         }
+        if(this->player.push(position,roll))
+        {
+            //this->computer.deleteNum(position,roll);
+
+            system("cls");
+            this->displayGameBoard();
+            break;
+        }
         else
         {
-            if(this->player[x].push(roll))
-            {
-                this->computer[x].deleteNum(roll);
-                system("cls");
-                this->displayGameboard();
-                break;
-            }
-            else
-            {
-                cout<<"错误"<<endl;
-                continue;
-            }
+            cout<<"错误"<<endl;
+            continue;
         }
     }
 
-    roll=rand()%6+1;
+    roll=this->randomNum();
     while(1)
     {
-        int x=rand()%3+1;
-        if(this->computer[x].push(roll))
+        int position=this->randomNum(1,3);
+        if(this->computer.push(position,roll))
         {
-            this->player[x].deleteNum(roll);
+            //this->player.deleteNum(position,roll);
+
             system("cls");
-            this->displayGameboard();
+            this->displayGameBoard();
             break;
         }
         else
@@ -244,7 +247,7 @@ bool StackGame::deleteNum(int num)
 }
 void StackGame::init()
 {
-    for(int i=0;i<=MaxNum;i++)
+    for(int i=0;i<=max_num;i++)
     {
         this->inner[i]=0;
     }
@@ -284,7 +287,7 @@ void StackGame::test()
 }
 void StackGame::test_all()
 {
-    for(int i=1;i<=MaxNum;i++)
+    for(int i=1;i<=max_num;i++)
     {
         cout<<this->inner[i]<<" ";
     }cout<<endl;
@@ -296,4 +299,66 @@ int StackGame::printSingle(int position)
 int StackGame::test_sizes()
 {
     return this->sizes;
+}
+
+void GameObject::init()
+{
+    for(int i=1;i<=Row;i++)
+    {
+        this->row[i].init();
+    }
+}
+
+bool GameObject::push(int position,int num)
+{
+    return this->row[position].push(num);
+}
+bool GameObject::isFull()
+{
+    for(int i=1;i<=Row;i++)
+    {
+        if(!this->row[i].isFull())
+        {
+            return false;
+        }
+    }
+    return true;
+}
+void GameObject::displayGameBoard(bool upsidedown)
+{
+    if(!upsidedown)
+    {
+        for(int i=1;i<=Line;i++)
+        {
+            for(int j=1;j<=Row;j++)
+            {
+                this->row[j].printSingle(i);
+                cout<<" ";
+            }
+            cout<<endl;
+        }
+        return;
+    }
+    for(int i=Line;i>=1;i--)
+    {
+        for(int j=1;j<=Row;j++)
+        {
+            this->row[j].printSingle(i);
+            cout<<" ";
+        }
+        cout<<endl;
+    }
+}
+void GameObject::deleteNum(int position,int num)
+{
+    this->row[position].deleteNum(num);
+}
+int GameObject::sumAll()
+{
+    int sum=0;
+    for(int i=1;i<=Row;i++)
+    {
+        sum+=this->row[i].sumAll();
+    }
+    return sum;
 }
