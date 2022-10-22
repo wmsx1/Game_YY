@@ -149,7 +149,7 @@ void Game_YY::gameStart()
 void Game_YY::displayGameBoard()
 {
     int sumComputer=this->computer.sumAll(),sumPlayer=this->player.sumAll();
-    this->computer.displayGameBoard();
+    this->computer.displayGameBoard(true);
 
     for(int i=1;i<=10;i++)
     {
